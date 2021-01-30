@@ -1,0 +1,27 @@
+#!/bin/sh
+
+destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)"
+
+while [ -d "/tmp/doasedit/$destfile_pfx" ]; do
+	destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)"
+done
+
+mkdir -p /tmp/doasedit/$destfile_pfx
+srcfile="$(realpath $1)"
+
+doas cp $srcfile /tmp/doasedit/$destfile_pfx/edit
+doas chown -R $USER:$USER /tmp/doasedit/$destfile_pfx/edit
+doas cp $srcfile /tmp/doasedit/$destfile_pfx/file
+
+$EDITOR /tmp/doasedit/$destfile_pfx/edit
+
+
+cat /tmp/doasedit/$destfile_pfx/edit | doas tee /tmp/doasedit/$destfile_pfx/file 1>/dev/null
+
+if cmp -s "/tmp/doasedit/$destfile_pfx/file" "$srcfile"; then
+	echo "Skipping write; no changes."
+else
+	doas mv -f /tmp/doasedit/$destfile_pfx/file $srcfile
+fi
+
+rm -rf /tmp/doasedit/$destfile_pfx
