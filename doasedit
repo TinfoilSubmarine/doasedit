@@ -9,12 +9,17 @@ done
 mkdir -p /tmp/doasedit/$destfile_pfx
 srcfile="$(realpath $1)"
 
-doas cp $srcfile /tmp/doasedit/$destfile_pfx/edit
-doas chown -R $USER:$USER /tmp/doasedit/$destfile_pfx/edit
-doas cp $srcfile /tmp/doasedit/$destfile_pfx/file
+if [ -f "$srcfile" ]; then
+	doas cp $srcfile /tmp/doasedit/$destfile_pfx/edit
+	doas chown -R $USER:$USER /tmp/doasedit/$destfile_pfx/edit
+	doas cp $srcfile /tmp/doasedit/$destfile_pfx/file
+else
+	# create file with "regular" system permissions (root:root 644)
+	touch /tmp/doasedit/$destfile_pfx/file
+	doas chown root:root /tmp/doasedit/$destfile_pfx/file
+fi
 
 $EDITOR /tmp/doasedit/$destfile_pfx/edit
-
 
 cat /tmp/doasedit/$destfile_pfx/edit | doas tee /tmp/doasedit/$destfile_pfx/file 1>/dev/null
 
