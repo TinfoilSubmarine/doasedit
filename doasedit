@@ -1,15 +1,24 @@
-#!/bin/sh
+#!/bin/bash
+if [ ! -z "${2}" ]; then
+	echo "Expected only one argument"
+	exit 1
+elif [ -z "${1}" ]; then
+	echo "No file path provided"
+	exit 1
+fi
 
-destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)"
+set -euo pipefail
+
+destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)" || true
 
 while [ -d "/tmp/doasedit/$destfile_pfx" ]; do
 	destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)"
 done
 
 mkdir -p /tmp/doasedit/$destfile_pfx
-srcfile="$(realpath $1)"
+srcfile="$(doas realpath $1)"
 
-if [ -f "$srcfile" ]; then
+if doas [ -f "$srcfile" ]; then
 	doas cp $srcfile /tmp/doasedit/$destfile_pfx/edit
 	doas chown -R $USER:$USER /tmp/doasedit/$destfile_pfx/edit
 	doas cp $srcfile /tmp/doasedit/$destfile_pfx/file
