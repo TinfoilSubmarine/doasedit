@@ -10,7 +10,7 @@ elif [ "$EUID" -eq 0 ]; then
 	exit 1
 fi
 
-set -euo pipefail
+set -Eeuo pipefail
 
 destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)" || true
 
@@ -21,6 +21,7 @@ done
 tempdir="/tmp/doasedit/$destfile_pfx"
 
 mkdir -p $tempdir
+trap "rm -rf $tempdir" EXIT
 srcfile="$(doas realpath $1)"
 
 if doas [ -f "$srcfile" ]; then
@@ -39,8 +40,9 @@ cat $tempdir/edit | doas tee $tempdir/file 1>/dev/null
 
 if cmp -s "$tempdir/file" "$srcfile"; then
 	echo "Skipping write; no changes."
+	exit 0
 else
 	doas mv -f $tempdir/file $srcfile
+	exit 0
 fi
 
-rm -rf $tempdir
