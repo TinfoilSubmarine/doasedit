@@ -2,7 +2,7 @@
 a Bash script replacement for sudoedit using doas.
 [Inspired by this Reddit comment.](https://www.reddit.com/r/linux/comments/l6y7nv/is_doas_a_good_alternative_to_sudo/gl4hs42?utm_source=share&utm_medium=web2x&context=3)
 
-##USE AT YOUR OWN RISK! THIS SCRIPT IS VERY ALPHA.
+## USE AT YOUR OWN RISK! THIS SCRIPT IS VERY ALPHA.
 I've already accidentally deleted a configuration file because of a hole in the
 script. That hole has obviously been fixed since then, along with the addition
 of several other safety measures, but do know that this script (and most other
