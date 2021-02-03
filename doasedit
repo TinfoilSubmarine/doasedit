@@ -5,6 +5,9 @@ if [ ! -z "${2}" ]; then
 elif [ -z "${1}" ]; then
 	echo "No file path provided"
 	exit 1
+elif [ "$EUID" -eq 0 ]; then
+	echo "Cannot be run as root"
+	exit 1
 fi
 
 set -euo pipefail
