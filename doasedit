@@ -20,14 +20,18 @@ done
 
 tempdir="/tmp/doasedit/$destfile_pfx"
 
-mkdir -p $tempdir
+# we don't want any other users to be able to read what we're doing, so -m700
+mkdir -m700 -p $tempdir
 trap "rm -rf $tempdir" EXIT
 srcfile="$(doas realpath $1)"
 
 if doas [ -f "$srcfile" ]; then
-	doas cp $srcfile $tempdir/edit
-	doas chown -R $USER:$USER $tempdir/edit
-	doas cp $srcfile $tempdir/file
+	doas cp -a $srcfile $tempdir/file
+	doas cp -a $tempdir/file $tempdir/edit
+
+	# make sure that the file is editable by user
+	doas chown $USER:$USER $tempdir/edit
+	chmod 600 $tempdir/edit
 else
 	# create file with "regular" system permissions (root:root 644)
 	touch $tempdir/file
@@ -38,7 +42,7 @@ $EDITOR $tempdir/edit
 
 cat $tempdir/edit | doas tee $tempdir/file 1>/dev/null
 
-if cmp -s "$tempdir/file" "$srcfile"; then
+if doas cmp -s "$tempdir/file" "$srcfile"; then
 	echo "Skipping write; no changes."
 	exit 0
 else
