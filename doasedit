@@ -1,44 +1,44 @@
-#!/bin/bash
-if [ ! -z "${2}" ]; then
+#!/bin/sh
+if [ -n "${2}" ]; then
 	echo "Expected only one argument"
 	exit 1
 elif [ -z "${1}" ]; then
 	echo "No file path provided"
 	exit 1
-elif [ "$EUID" -eq 0 ]; then
+elif [ "$(id -u)" -eq 0 ]; then
 	echo "Cannot be run as root"
 	exit 1
 fi
 
-set -Eeuo pipefail
+set -eu
 
 tempdir="$(mktemp -d)"
 
-trap "rm -rf $tempdir" EXIT
-srcfile="$(doas realpath $1)"
+trap 'rm -rf $tempdir' EXIT
+srcfile="$(doas realpath "$1")"
 
 if doas [ -f "$srcfile" ]; then
-	doas cp -a $srcfile $tempdir/file
-	doas cp -a $tempdir/file $tempdir/edit
+	doas cp -a "$srcfile" "$tempdir"/file
+	doas cp -a "$tempdir"/file "$tempdir"/edit
 
 	# make sure that the file is editable by user
-	doas chown $USER:$USER $tempdir/edit
-	chmod 600 $tempdir/edit
+	doas chown "$USER":"$USER" "$tempdir"/edit
+	chmod 600 "$tempdir"/edit
 else
 	# create file with "regular" system permissions (root:root 644)
-	touch $tempdir/file
-	doas chown root:root $tempdir/file
+	touch "$tempdir"/file
+	doas chown root:root "$tempdir"/file
 fi
 
-$EDITOR $tempdir/edit
+$EDITOR "$tempdir"/edit
 
-cat $tempdir/edit | doas tee $tempdir/file 1>/dev/null
+doas tee "$tempdir"/file 1>/dev/null < "$tempdir"/edit
 
 if doas cmp -s "$tempdir/file" "$srcfile"; then
 	echo "Skipping write; no changes."
 	exit 0
 else
-	doas mv -f $tempdir/file $srcfile
+	doas mv -f "$tempdir"/file "$srcfile"
 	exit 0
 fi
 
