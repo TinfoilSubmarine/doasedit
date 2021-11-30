@@ -12,16 +12,8 @@ fi
 
 set -Eeuo pipefail
 
-destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)" || true
+tempdir="$(mktemp -d)"
 
-while [ -d "/tmp/doasedit/$destfile_pfx" ]; do
-	destfile_pfx="$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32)"
-done
-
-tempdir="/tmp/doasedit/$destfile_pfx"
-
-# we don't want any other users to be able to read what we're doing, so -m700
-mkdir -m700 -p $tempdir
 trap "rm -rf $tempdir" EXIT
 srcfile="$(doas realpath $1)"
 
